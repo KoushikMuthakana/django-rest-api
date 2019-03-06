@@ -1,11 +1,18 @@
 from django.shortcuts import render
-from rest_framework import viewsets
 
+from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.authentication import TokenAuthentication
+from rest_framework import filters
+from rest_framework.authtoken.serializers import AuthTokenSerializer
+from rest_framework.authtoken.views import ObtainAuthToken
+
 from .models import UserProfile
 from . import serializers
+from . import models
+from . import permissions
 
 
 
@@ -41,21 +48,18 @@ class HelloAPI(APIView):
 
     def put(self,request,pk=None):
         """Handles updating an object """
-        
-        
+
         return Response({'Method':'Post'})
 
 
     def patch(self,request,pk=None):
         """ Patch request, only updatesfields provided in request """
         
-        
         return Response({'Method':'patch'})
 
 
     def delete(self,request,pk=None):
         """ delete request, deleted an object """
-        
         
         return Response({'Method':'delete'})
 
@@ -86,20 +90,17 @@ class HelloViewSet(viewsets.ViewSet):
     def retrieve(self,request,pk=None):
         """ retrieve request, gets an object """
         
-        
         return Response({'Method':'get'})
     
     def update(self,request,pk=None):
         """ update request, update an object """
-        
         
         return Response({'Method':'update'})
 
 
     def partial_update(self,request,pk=None):
         """ Patch request, only updatesfields provided in request """
-        
-        
+         
         return Response({'Method':'patch'})
     
         
@@ -107,5 +108,22 @@ class HelloViewSet(viewsets.ViewSet):
         """Handle removing an object"""
 
         return Response({'http_method': 'DELETE'})
-        
 
+    
+
+class UserProfileViewSet(viewsets.ModelViewSet):
+    """ Handles creating ,updating profiles"""
+    serializer_class=serializers.UserProfileSerializer
+    queryset=models.UserProfile.objects.all()
+    permission_classes=(permissions.UpdateOwnProfile,)
+    authentication_classes=(TokenAuthentication,)
+    filter_backends=(filters.SearchFilter,)
+    search_fields=('name','email',)
+
+class LoginViewSet(viewsets.ViewSet):
+    """Checks email and password and returns an auth token."""
+    serializer_class=AuthTokenSerializer
+    def create(self,request):
+        """Use the ObtainAuthToken APIView to validate and create a token."""
+        return ObtainAuthToken().post(request)
+    
